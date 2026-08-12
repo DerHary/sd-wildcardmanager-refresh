@@ -85,8 +85,12 @@
   padding: 0.2rem 0.5rem !important;
 }
 
-.wcmr-tree-leaf {
-  position: relative;
+/* Each tree row needs its own stable hit area.  Floats made nested rows overlap
+   until the browser happened to reflow them after a scroll or mouse movement. */
+.wcmr-tree-leaf-content {
+  align-items: center;
+  display: flex;
+  min-height: 20px;
 }
 
 .wcmr-tree-child-leaves {
@@ -99,15 +103,16 @@
 }
 
 .wcmr-tree-expando {
+  align-items: center;
   background: #ddd;
   border-radius: 3px;
   cursor: pointer;
-  float: left;
+  display: inline-flex;
+  flex: 0 0 10px;
   height: 10px;
+  justify-content: center;
   line-height: 10px;
-  position: relative;
   text-align: center;
-  top: 5px;
   width: 10px;
 }
 
@@ -117,20 +122,9 @@
 
 .wcmr-tree-leaf-text {
   cursor: pointer;
-  float: left;
   margin-left: 5px;
 }
 
 .wcmr-tree-leaf-text:hover {
   color: var(--link-text-color);
-}
-
-.wcmr-tree-leaf-content::before,
-.wcmr-tree-leaf-content::after {
-  content: " ";
-  display: table;
-}
-
-.wcmr-tree-leaf-content::after {
-  clear: both;
 }
