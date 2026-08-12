@@ -85,21 +85,30 @@
   padding: 0.2rem 0.5rem !important;
 }
 
-/* Each tree row needs its own stable hit area.  Floats made nested rows overlap
-   until the browser happened to reflow them after a scroll or mouse movement. */
+/* Keep every expanded branch in normal document flow.  Forge/Gradio theme
+   rules must not give nested branches a fixed height or positioned layout. */
+.wcmr-tree-leaf,
+.wcmr-tree-child-leaves {
+  display: block !important;
+  float: none !important;
+  height: auto !important;
+  overflow: visible !important;
+  position: static !important;
+}
+
 .wcmr-tree-leaf-content {
   align-items: center;
-  display: flex;
+  display: flex !important;
   min-height: 20px;
 }
 
 .wcmr-tree-child-leaves {
-  display: block;
+  clear: both;
   margin-left: 15px;
 }
 
 .wcmr-hidden {
-  display: none;
+  display: none !important;
 }
 
 .wcmr-tree-expando {
