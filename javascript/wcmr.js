@@ -201,6 +201,7 @@ class WCMRUI {
   appendSelectedToTxt2Img() {
     if (!WCMR.selected?.wrappedName) return [];
     WCMR.appendToTxt2Img([WCMR.selected.wrappedName]);
+    WCMR.switchToTxt2ImgTab();
     return [];
   }
 
@@ -251,8 +252,19 @@ class WCMRUI {
 
   appendCompositionToTxt2Img() {
     WCMR.appendToTxt2Img(WCMR.composition.map((item) => item.wrappedName));
-    WCMR.selector("#tab_txt2img")?.click();
+    WCMR.switchToTxt2ImgTab();
     return [];
+  }
+
+  switchToTxt2ImgTab() {
+    const tabs = WCMR.selector("#tabs");
+    if (!tabs) return;
+
+    // Forge NEO's own UI uses the first main-tab button for txt2img.
+    const txt2imgButton = [...tabs.querySelectorAll("button")].find(
+      (button) => button.textContent.trim().toLowerCase() === "txt2img",
+    ) || tabs.querySelector("button");
+    txt2imgButton?.click();
   }
 
   appendToTxt2Img(wildcards) {
