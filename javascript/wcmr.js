@@ -170,9 +170,32 @@ class WCMRUI {
     this.configureSearch();
   }
 
-  confirmDelete() {
-    const confirmed = window.confirm("Delete all wildcards? The folder will be moved to the Recycle Bin.");
-    return confirmed ? "True" : "False";
+  confirmDeleteSelected() {
+    if (!WCMR.selected?.name) {
+      window.alert("Select a wildcard first.");
+      return WCMR.formatPayload({ action: "delete selected wildcard", name: "" });
+    }
+    const selectedName = WCMR.selected.name;
+    const selectedDisplayName = WCMR.selected.wrappedName;
+    const confirmed = window.confirm(
+      `Move the source file for ${selectedDisplayName} to the Recycle Bin?\n\nFor YAML or JSON, this can remove other collections stored in the same source file.`,
+    );
+    if (confirmed) WCMR.clearSelectedWildcard();
+    return WCMR.formatPayload({
+      action: "delete selected wildcard",
+      name: confirmed ? selectedName : "",
+    });
+  }
+
+  clearSelectedWildcard() {
+    this.selected = null;
+    for (const selector of ["#wcmr-file-name textarea", "#wcmr-contents-preview textarea"]) {
+      const field = this.selector(selector);
+      if (field) {
+        field.value = "";
+        window.updateInput?.(field);
+      }
+    }
   }
 
   appendSelectedToTxt2Img() {
@@ -228,6 +251,7 @@ class WCMRUI {
 
   appendCompositionToTxt2Img() {
     WCMR.appendToTxt2Img(WCMR.composition.map((item) => item.wrappedName));
+    WCMR.selector("#tab_txt2img")?.click();
     return [];
   }
 

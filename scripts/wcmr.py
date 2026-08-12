@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import logging
 import random
-import shutil
 from pathlib import Path
 
 import gradio as gr
@@ -46,18 +45,6 @@ def wildcard_root() -> Path:
 
     root.mkdir(parents=True, exist_ok=True)
     return root.resolve()
-
-
-def collection_dirs() -> dict[str, Path]:
-    dynamic_prompts = dynamic_prompts_path()
-    collections_root = dynamic_prompts / "collections" if dynamic_prompts else None
-    if not collections_root or not collections_root.is_dir():
-        return {}
-    return {
-        str(path.relative_to(collections_root)): path
-        for path in collections_root.iterdir()
-        if path.is_dir()
-    }
 
 
 def dynamic_prompts_wildcards_tab():
@@ -104,72 +91,55 @@ def handle_message(event_text: str) -> str:
         action = event["action"]
         if action == "load file":
             return load_wildcard(event["name"])
+        if action == "delete selected wildcard":
+            if not event.get("name"):
+                return payload(action="delete selected wildcard", success=True)
+            return delete_selected_wildcard(event["name"])
         raise ValueError(f"Unknown WCMR action: {action}")
     except Exception as error:
         LOGGER.exception("Unable to handle WCMR message")
         return payload(action="message processing", success=False, message=str(error))
 
 
-def copy_collection(overwrite: bool, collection: str | None) -> str:
-    try:
-        source = collection_dirs().get(collection or "")
-        if source is None:
-            raise ValueError("Select a collection first.")
-        destination_root = wildcard_root() / (collection or "")
-        for source_file in source.rglob("*"):
-            if not source_file.is_file():
-                continue
-            destination = destination_root / source_file.relative_to(source)
-            if not destination.exists() or overwrite:
-                destination.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(source_file, destination)
-        return refresh_wildcards()
-    except Exception as error:
-        LOGGER.exception("Unable to copy collection")
-        return payload(action="copy collection", success=False, message=str(error))
+def wildcard_source_path(name: str) -> Path:
+    """Find the real source file behind a Dynamic Prompts wildcard collection."""
+    wildcard = dynamic_prompts_wildcards_tab().wildcard_manager.get_file(name)
+    source = getattr(wildcard, "_path", None) or getattr(wildcard, "source", None)
+    if isinstance(source, tuple):
+        source = source[0]
+    if not isinstance(source, Path):
+        raise ValueError(f"WCMR cannot determine the source file for '{name}'.")
+    source = source.resolve()
+    root = wildcard_root()
+    if root not in source.parents:
+        raise ValueError("Refusing to delete a wildcard outside the configured wildcard directory.")
+    return source
 
 
-def delete_all_wildcards(confirmed: str) -> str:
-    if confirmed != "True":
-        return payload(action="delete tree", success=False)
+def delete_selected_wildcard(name: str) -> str:
     try:
-        root = wildcard_root()
-        if root.parent == root:
-            raise ValueError("Refusing to delete a filesystem root.")
         if send2trash is None:
-            raise RuntimeError("send2trash is required to delete the wildcard library safely.")
-        send2trash(str(root))
-        root.mkdir(parents=True, exist_ok=True)
+            raise RuntimeError("send2trash is required to delete wildcards safely.")
+        source = wildcard_source_path(name)
+        send2trash(str(source))
         return refresh_wildcards()
     except Exception as error:
-        LOGGER.exception("Unable to delete wildcard library")
-        return payload(action="delete tree", success=False, message=str(error))
+        LOGGER.exception("Unable to delete selected wildcard")
+        return payload(action="delete selected wildcard", success=False, message=str(error))
 
 
 def on_ui_tabs():
-    try:
-        library_path = wildcard_root()
-    except Exception as error:
-        library_path = f"Unavailable: {error}"
-
     with gr.Blocks() as wcmr_tab:
         with gr.Row():
             with gr.Column():
-                with gr.Accordion("Help", open=False):
-                    gr.HTML(
-                        f"<ol><li>WCMR manages the wildcard library used by Dynamic Prompts.</li>"
-                        f"<li>Select a wildcard in the tree to use it.</li>"
-                        f"<li>Use <code>__name__</code> in a prompt, or append the selected wildcard directly to txt2img.</li>"
-                        f"<li>Current wildcard library: <code>{library_path}</code></li></ol>"
-                    )
-                with gr.Accordion("Collection actions", open=False):
-                    collection_dropdown = gr.Dropdown(choices=sorted(collection_dirs()), label="Select a collection")
-                    with gr.Row():
-                        copy_button = gr.Button("Copy collection")
-                        overwrite = gr.Checkbox(label="Overwrite existing", value=False)
+                gr.HTML(
+                    "<a class='wcmr-repository-link' href='https://github.com/DerHary/sd-wildcardmanager-refresh' "
+                    "target='_blank' rel='noopener noreferrer'>WCMR on GitHub</a>"
+                )
+                with gr.Accordion("Actions", open=False):
                     with gr.Row():
                         refresh_button = gr.Button("Refresh wildcards", elem_id="wcmr-refresh-button")
-                        delete_button = gr.Button("Delete all wildcards", elem_id="wcmr-delete-button")
+                        delete_button = gr.Button("Delete selected wildcard", elem_id="wcmr-delete-button")
                 gr.Textbox(placeholder="Search wildcard names...", label="", elem_id="wcmr-search")
                 gr.HTML("Loading...", elem_id="wcmr-tree")
             with gr.Column():
@@ -199,8 +169,7 @@ def on_ui_tabs():
 
         action_button.click(handle_message, inputs=[client_message], outputs=[server_message])
         refresh_button.click(refresh_wildcards, outputs=[server_message])
-        delete_button.click(delete_all_wildcards, _js="WCMR.confirmDelete", inputs=[client_message], outputs=[server_message])
-        copy_button.click(copy_collection, inputs=[overwrite, collection_dropdown], outputs=[server_message])
+        delete_button.click(handle_message, _js="WCMR.confirmDeleteSelected", inputs=[client_message], outputs=[server_message])
         append_button.click(fn=None, _js="WCMR.appendSelectedToTxt2Img")
         add_to_composition_button.click(fn=None, _js="WCMR.addSelectedToComposition")
         append_composition_button.click(fn=None, _js="WCMR.appendCompositionToTxt2Img")

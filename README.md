@@ -10,9 +10,8 @@ WCMR does **not** expand prompt syntax itself. Dynamic Prompts remains responsib
 - Browses the same wildcard library configured for Dynamic Prompts.
 - Searches the Dynamic Prompts wildcard tree.
 - Shows the original Dynamic Prompts preview for the selected wildcard, including supported non-text collections.
-- Copies a bundled Dynamic Prompts collection into the active wildcard library.
 - Refreshes the wildcard index after filesystem changes.
-- Moves the complete wildcard library to the Recycle Bin after confirmation.
+- Moves the selected wildcard's source file to the Recycle Bin after confirmation.
 - Appends one selected wildcard to the end of the txt2img prompt.
 - Builds a temporary, ordered wildcard composition and appends the complete composition to the txt2img prompt.
 
@@ -97,17 +96,15 @@ __subject__, __appearance/hair_color__, __clothing/dress__, __background/city__
 
 Compositions are intentionally browser-session-only. They are not saved to disk and disappear after a full page reload or browser restart.
 
-### Collection actions
+### Actions
 
-The **Collection actions** section works with the collections bundled by Dynamic Prompts.
+The compact **Actions** section contains the library-level operations:
 
-- **Copy collection** copies the selected collection into the active wildcard library.
-- **Overwrite existing** replaces files that already exist at the destination.
 - **Refresh wildcards** rebuilds the Dynamic Prompts wildcard tree. Use this after editing wildcard files outside Forge NEO.
-- **Delete all wildcards** moves the complete active wildcard library to the Recycle Bin after confirmation, then recreates an empty library directory.
+- **Delete selected wildcard** moves the source file of the currently selected wildcard to the Recycle Bin after confirmation.
 
 > [!WARNING]
-> `Delete all wildcards` affects the complete configured Dynamic Prompts wildcard directory, not only a selection in WCMR. Although it is sent to the Recycle Bin, treat it as a destructive action.
+> A text wildcard normally maps to one file. Structured YAML or JSON source files can contain several collections; deleting one such selection moves the entire source file, including its related collections, to the Recycle Bin.
 
 ## Wildcard location
 

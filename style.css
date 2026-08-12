@@ -16,6 +16,39 @@
   max-height: 100%;
 }
 
+.wcmr-repository-link {
+  display: inline-block;
+  font-size: 0.85rem;
+  margin: 0 0 0.35rem 0.25rem;
+}
+
+#wcmr-refresh-button,
+#wcmr-refresh-button button,
+#wcmr-add-to-composition-button,
+#wcmr-add-to-composition-button button,
+#wcmr-append-composition-button,
+#wcmr-append-composition-button button {
+  background: #238636 !important;
+  border-color: #2ea043 !important;
+  color: #fff !important;
+}
+
+#wcmr-append-button,
+#wcmr-append-button button {
+  background: #1f6feb !important;
+  border-color: #388bfd !important;
+  color: #fff !important;
+}
+
+#wcmr-delete-button,
+#wcmr-delete-button button,
+#wcmr-clear-composition-button,
+#wcmr-clear-composition-button button {
+  background: #b62324 !important;
+  border-color: #d1242f !important;
+  color: #fff !important;
+}
+
 #wcmr-composition {
   border: var(--input-border-width) solid var(--border-color-primary);
   border-radius: var(--input-radius);
