@@ -11,11 +11,6 @@
   padding: 0.25rem;
 }
 
-/* Gradio may put the HTML content in an extra wrapper depending on its version. */
-#wcmr-tree > div {
-  max-height: 100%;
-}
-
 .wcmr-repository-link {
   display: inline-block;
   font-size: 0.85rem;
